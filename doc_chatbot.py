@@ -13,7 +13,7 @@ from langchain.vectorstores import FAISS
 st.header('Document chat bot')
 logging.info('Key retrieval')
 # Set the API key using an environment variable
-os.environ["OPENAI_API_KEY"] = "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"
+os.environ["OPENAI_API_KEY"] = "paste your api key"
 # Load the API key from the environment variable
 api_key = os.environ["OPENAI_API_KEY"]
 # Set the API key in the OpenAI module
