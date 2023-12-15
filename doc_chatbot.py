@@ -1,3 +1,5 @@
+from src.logger import logging
+from src.exception import CustomException
 import os
 import streamlit as st
 from streamlit_chat import message
@@ -9,9 +11,9 @@ from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.vectorstores import FAISS
 
 st.header('Document chat bot')
-
+logging.info('Key retrieval')
 # Set the API key using an environment variable
-os.environ["OPENAI_API_KEY"] = "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"
+os.environ["OPENAI_API_KEY"] = "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"
 # Load the API key from the environment variable
 api_key = os.environ["OPENAI_API_KEY"]
 # Set the API key in the OpenAI module
