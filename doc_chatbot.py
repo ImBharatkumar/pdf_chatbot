@@ -11,14 +11,6 @@ from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.vectorstores import FAISS
 
 st.header('Document chat bot')
-logging.info('Key retrieval')
-# Set the API key using an environment variable
-os.environ["OPENAI_API_KEY"] = "paste your api key"
-# Load the API key from the environment variable
-api_key = os.environ["OPENAI_API_KEY"]
-# Set the API key in the OpenAI module
-OpenAI.api_key = api_key
-
 # session_state is used to store or display chat history
 if 'generated' not in st.session_state:
     st.session_state['generated'] = []
