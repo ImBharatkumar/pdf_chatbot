@@ -10,71 +10,83 @@ from langchain.text_splitter import CharacterTextSplitter
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.vectorstores import FAISS
 
-st.header('Document chat bot')
-# session_state is used to store or display chat history
-if 'generated' not in st.session_state:
-    st.session_state['generated'] = []
 
-if 'past' not in st.session_state:
-    st.session_state['past'] = []
+# Set the API key using an environment variable
+os.environ["OPENAI_API_KEY"] = "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"
+# Load the API key from the environment variable
+api_key = os.environ["OPENAI_API_KEY"]
+# Set the API key in the OpenAI module
+OpenAI.api_key = api_key
 
-# location of the pdf file/files.
-uploaded = st.file_uploader('choose a file')
+try:
+    logging.info("session started")
+    st.header('Document chat bot')
+    # session_state is used to store or display chat history
+    if 'generated' not in st.session_state:
+        st.session_state['generated'] = []
 
-# read data from the file and put them into a variable called raw_text
-def get_ans(query):
-    reader = PdfReader(uploaded)
-    raw_text = ''
-    for i, page in enumerate(reader.pages):
-        text = page.extract_text()
-        if text:
-            raw_text += text
+    if 'past' not in st.session_state:
+        st.session_state['past'] = []
 
-    # We need to split the text that we read into smaller chunks so that during information retreival we don't hit the token size limits.
-    text_splitter = CharacterTextSplitter(
-        separator="\n",
-        chunk_size=1000,
-        chunk_overlap=200,
-        length_function=len,
-    )
-    texts = text_splitter.split_text(raw_text)
-    print(text)
+    # location of the pdf file/files.
+    uploaded = st.file_uploader('choose a file')
 
-    # Download embeddings from OpenAI
-    embeddings = OpenAIEmbeddings()
+    # read data from the file and put them into a variable called raw_text
+    def get_ans(query):
+        reader = PdfReader(uploaded)
+        raw_text = ''
+        for i, page in enumerate(reader.pages):
+            text = page.extract_text()
+            if text:
+                raw_text += text
 
-    # FAISS is a library for efficient similarity search and clustering of dense vectors
-    docsearch = FAISS.from_texts(texts, embeddings)
+        # We need to split the text that we read into smaller chunks so that during information retreival we don't hit the token size limits.
+        text_splitter = CharacterTextSplitter(
+            separator="\n",
+            chunk_size=1000,
+            chunk_overlap=200,
+            length_function=len,
+        )
+        texts = text_splitter.split_text(raw_text)
+        print(text)
 
-    chain = load_qa_chain(OpenAI(), chain_type="stuff")
-    docs = docsearch.similarity_search(query)
-    return chain.run(input_documents=docs, question=query)
+        # Download embeddings from OpenAI
+        embeddings = OpenAIEmbeddings()
 
-def clear_text_input():
-    global input_text
-    input_text=""
+        # FAISS is a library for efficient similarity search and clustering of dense vectors
+        docsearch = FAISS.from_texts(texts, embeddings)
 
-def get_text():
-    global input_text
-    input_text= st.text_input('Ask a question',key='input',on_change=clear_text_input)
-    return input_text
+        chain = load_qa_chain(OpenAI(), chain_type="stuff")
+        docs = docsearch.similarity_search(query)
+        return chain.run(input_documents=docs, question=query)
 
-def clear_history():
-    st.session_state['generated'] = []
-    st.session_state['past'] = []
+    def clear_text_input():
+        global input_text
+        input_text=""
 
-if uploaded:
-    user_input= get_text()
-    if st.button('post'):
-        output=get_ans(user_input)
-        # storing the output
-        st.session_state.past.append(user_input)
-        st.session_state.generated.append(output)
+    def get_text():
+        global input_text
+        input_text= st.text_input('Ask a question',key='input',on_change=clear_text_input)
+        return input_text
 
-if st.button('Clear History'):
-    clear_history()
+    def clear_history():
+        st.session_state['generated'] = []
+        st.session_state['past'] = []
 
+    if uploaded:
+        user_input= get_text()
+        if st.button('post'):
+            output=get_ans(user_input)
+            # storing the output
+            st.session_state.past.append(user_input)
+            st.session_state.generated.append(output)
 
-for i in range(len(st.session_state['generated'])-1,-1,-1):
-    message(st.session_state['past'][i],is_user=True,key=f"user_message_{i}")
-    message(st.session_state['generated'][i],key=str(i))
+    if st.button('Clear History'):
+        clear_history()
+
+    logging.info('message generated')
+    for i in range(len(st.session_state['generated'])-1,-1,-1):
+        message(st.session_state['past'][i],is_user=True,key=f"user_message_{i}")
+        message(st.session_state['generated'][i],key=str(i))
+except Exception as e:
+    raise CustomException
