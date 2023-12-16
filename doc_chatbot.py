@@ -12,7 +12,7 @@ from langchain.vectorstores import FAISS
 
 
 # Set the API key using an environment variable
-os.environ["OPENAI_API_KEY"] = "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"
+os.environ["OPENAI_API_KEY"] = "paste your api key"
 # Load the API key from the environment variable
 api_key = os.environ["OPENAI_API_KEY"]
 # Set the API key in the OpenAI module
