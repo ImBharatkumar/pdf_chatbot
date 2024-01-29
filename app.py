@@ -9,10 +9,11 @@ from PyPDF2 import PdfReader
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.vectorstores import FAISS
-
+import sys
+embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
 
 # Set the API key using an environment variable
-os.environ["OPENAI_API_KEY"] = "paste your api key"
+os.environ["OPENAI_API_KEY"] = "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"
 # Load the API key from the environment variable
 api_key = os.environ["OPENAI_API_KEY"]
 # Set the API key in the OpenAI module
@@ -51,7 +52,8 @@ try:
         print(text)
 
         # Download embeddings from OpenAI
-        embeddings = OpenAIEmbeddings()
+        embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+
 
         # FAISS is a library for efficient similarity search and clustering of dense vectors
         docsearch = FAISS.from_texts(texts, embeddings)
@@ -89,4 +91,4 @@ try:
         message(st.session_state['past'][i],is_user=True,key=f"user_message_{i}")
         message(st.session_state['generated'][i],key=str(i))
 except Exception as e:
-    raise CustomException
+    raise CustomException(error_message="An error occurred", error_detail=e)

@@ -1,14 +1,19 @@
 import sys 
 from src.logger import logging
+import traceback
 
-def error_message_detail(error,error_detail:sys):
-    _,_,exc_tb=error_detail.exc_info()
-    file_name=exc_tb.tb_frame.f_code.co_filename
-    error_message="Error occured in python script name [{0}] line number [{1}] error message[{2}]".format(
-     file_name,exc_tb.tb_lineno,str(error))
+import traceback
 
-    return error_message
+def error_message_detail(error_message, error_detail=None):
+    if error_detail is not None:
+        error_detail_msg = f'Error Detail:\n{error_detail}'
+    else:
+        error_detail_msg = ''
 
+    if type(error_message) is str:
+        error_message = error_message.replace('\n', '<br>')
+
+    return f'<pre>{error_message}{error_detail_msg}</pre>'
     
 
 class CustomException(Exception):
@@ -18,3 +23,6 @@ class CustomException(Exception):
     
     def __str__(self):
         return self.error_message
+    
+
+   
