@@ -1,6 +1,7 @@
 from src.logger import logging
 from src.exception import CustomException
 import os
+from dotenv import load_dotenv
 import streamlit as st
 from streamlit_chat import message
 from langchain.chains.question_answering import load_qa_chain
@@ -12,12 +13,13 @@ from langchain.vectorstores import FAISS
 import sys
 embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
 
-# Set the API key using an environment variable
-os.environ["OPENAI_API_KEY"] = "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"
-# Load the API key from the environment variable
-api_key = os.environ["OPENAI_API_KEY"]
-# Set the API key in the OpenAI module
-OpenAI.api_key = api_key
+# Load the .env file
+load_dotenv()
+# Get the open_api_key from the .env file
+open_api_key = os.getenv("OPENAI_API_KEY")
+# Initialize the OpenAIEmbeddings object
+openai_embeddings = OpenAIEmbeddings(api_key=open_api_key)
+
 
 try:
     logging.info("session started")
