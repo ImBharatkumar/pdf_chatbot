@@ -5,15 +5,22 @@ This is a bot powered by GPT 3, you can upload any PDF and ask the related quest
 1) python
 2) LLM
 3) NLP
+4) open API key
 
 # Usage
 > Create the virtual environment
 
 `conda create -n venv`
 
+`git clone https://github.com/ImBharatkumar/pdf_chatbot.git`
+
 >Install required packages
 
-`pip install -r requirements.txt'`
+`pip install -r requirements.txt`
+
+> Create a .env file and save the open ai API key
+
+  `OPEN_AI_API="API key"`
 
 >run app.py file
 
