@@ -5,21 +5,32 @@ from dotenv import load_dotenv
 import streamlit as st
 from streamlit_chat import message
 from langchain.chains.question_answering import load_qa_chain
-from langchain.llms import OpenAI
-from langchain_community.llms import OpenAI
 from PyPDF2 import PdfReader
 from langchain.text_splitter import CharacterTextSplitter
-from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
+from langchain_community.embeddings import JinaEmbeddings
 import sys
-embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_ollama.llms import OllamaLLM
+from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain.schema.runnable import RunnableMap
+
+template = """Question: {question}
+Answer: Let's think step by step."""
+
+prompt = ChatPromptTemplate.from_template(template)
+model = model = OllamaLLM(model="llama3.2", extra_fields_behavior="allow")  # Adjust as per documentation
+chain = RunnableMap({
+    "context": lambda x: "\n".join([doc.page_content for doc in x["input_documents"]]),
+    "question": lambda x: x["question"]
+}) | model
+
 
 # Load the .env file
 load_dotenv()
-# Get the open_api_key from the .env file
-open_api_key = os.getenv("OPENAI_API_KEY")
-# Initialize the OpenAIEmbeddings object
-openai_embeddings = OpenAIEmbeddings(api_key=open_api_key)
+# Get the _api_key from the .env file
+jina_api_key = os.getenv("JINA_API_KEY")
+
 
 
 try:
@@ -37,6 +48,10 @@ try:
 
     # read data from the file and put them into a variable called raw_text
     def get_ans(query):
+        if not uploaded:
+            st.warning("Please upload a PDF file first.")
+            return
+
         reader = PdfReader(uploaded)
         raw_text = ''
         for i, page in enumerate(reader.pages):
@@ -44,7 +59,6 @@ try:
             if text:
                 raw_text += text
 
-        # We need to split the text that we read into smaller chunks so that during information retreival we don't hit the token size limits.
         text_splitter = CharacterTextSplitter(
             separator="\n",
             chunk_size=1000,
@@ -52,18 +66,22 @@ try:
             length_function=len,
         )
         texts = text_splitter.split_text(raw_text)
-        print(text)
 
-        # Download embeddings from OpenAI
-        embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
-
-
-        # FAISS is a library for efficient similarity search and clustering of dense vectors
+        embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
         docsearch = FAISS.from_texts(texts, embeddings)
 
-        chain = load_qa_chain(OpenAI(), chain_type="stuff")
+        # Load the QA chain using the model
+        chain = load_qa_chain(model, chain_type="stuff")
         docs = docsearch.similarity_search(query)
-        return chain.run(input_documents=docs, question=query)
+
+        result = chain.invoke({"input_documents": docs, "question": query})
+
+        # Extract and return only the answer text
+        if isinstance(result, dict) and "output_text" in result:
+            return result["output_text"]
+        else:
+            return result
+
 
     def clear_text_input():
         global input_text
@@ -95,3 +113,4 @@ try:
         message(st.session_state['generated'][i],key=str(i))
 except Exception as e:
     raise CustomException(error_message="An error occurred", error_detail=e)
+
